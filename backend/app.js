@@ -7,11 +7,14 @@ const userRouter = require('./routes/userRoute')
 const connectDB = require('./db/connect');
 const bodyParser = require('body-parser');
 
-const errorHandler = require('./middlewares/errorMiddleware')
 
 app.use(express.json())
 app.use(express.urlencoded({extended: false}))
 app.use(bodyParser.json())
+
+const notFoundMiddleware = require('./middleware/not-found');
+const errorHandlerMiddleware = require('./middleware/error-handler');
+
 
 
 
@@ -25,7 +28,8 @@ app.get('/', (req, res) => {
 
 
 //error iddleware
-app.use(errorHandler)
+app.use(notFoundMiddleware);
+app.use(errorHandlerMiddleware);
 
 
 
