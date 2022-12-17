@@ -1,9 +1,14 @@
 // const User = require('../models/User')
 const UserModel = require('../models/User')
 const { StatusCodes } = require('http-status-codes')
-// const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken')
 const { BadRequestError, UnauthenticatedError } = require('../errors')
 // const bcrypt = require('bcryptjs')
+
+const generateToken = (id) => {
+    return jwt.sign({id}, process.env.JWT_SECRET, {expiresIn: '30d'})
+
+}
 
 
 
@@ -27,9 +32,11 @@ const register = async (req, res) => {
 
     const user = await UserModel.create({name, email, password, })
 
+    const token = generateToken(user._id)
+
     if (user){
         const { _id, name, email, bio, phone, photo } = user
-        res.status(StatusCodes.CREATED).json({ name, email, _id, bio, phone, photo})
+        res.status(StatusCodes.CREATED).json({ name, email, _id, bio, phone, photo, token})
     } else {
         throw new BadRequestError('invalid user data')
     }
