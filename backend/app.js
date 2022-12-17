@@ -4,16 +4,22 @@ require('dotenv').config();
 
 const userRouter = require('./routes/userRoute')
 
-const connectDB = require('./db/connect');
-const bodyParser = require('body-parser');
-
-
-app.use(express.json())
-app.use(express.urlencoded({extended: false}))
-app.use(bodyParser.json())
-
 const notFoundMiddleware = require('./middleware/not-found');
 const errorHandlerMiddleware = require('./middleware/error-handler');
+
+const connectDB = require('./db/connect');
+
+const bodyParser = require('body-parser');
+const cors = require('cors')
+const cookieParser = require('cookie-parser')
+
+app.use(express.json())
+app.use(cookieParser())
+app.use(express.urlencoded({extended: false}))
+app.use(bodyParser.json())
+app.use(cors())
+
+
 
 
 
