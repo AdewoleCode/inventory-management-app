@@ -1,7 +1,7 @@
 const UserModel = require('../models/User')
 const { StatusCodes } = require('http-status-codes')
 const jwt = require('jsonwebtoken')
-const { BadRequestError, UnauthenticatedError } = require('../errors')
+const { BadRequestError, UnauthenticatedError, NotFoundError } = require('../errors')
 const bcrypt = require('bcryptjs')
 
 const generateToken = (id) => {
@@ -95,5 +95,33 @@ const login= async (req, res) => {
     }
 }
 
+const logout = async (req, res) => {
+    res.cookie('token', "", {
+        path: '/',
+        httpOnly: true,
+        expiresIn: new Date(0),
+        sameSite: "none",
+        security: true
+    })
 
-module.exports = {register, login}
+    return res.status(StatusCodes.OK).json({msg: "successfully logged out"})
+}
+
+
+//get user data
+const getUser = async (req, res) => {
+    const user = await UserModel.findById(req.user._id)
+
+    if(user){
+        const { _id, name, email, bio, phone, photo } = user
+        res.status(StatusCodes.OK).json({
+            name, email, _id, bio, phone, photo
+        })
+    } else {
+        throw new NotFoundError('user not found!')
+    }
+
+}
+
+
+module.exports = {register, login, logout, getUser}
