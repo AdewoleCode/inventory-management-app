@@ -1,8 +1,9 @@
 const UserModel = require('../models/User')
-const { StatusCodes } = require('http-status-codes')
+const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const { BadRequestError, UnauthenticatedError, NotFoundError } = require('../errors')
-const bcrypt = require('bcryptjs')
+const { StatusCodes } = require('http-status-codes')
+
 
 const generateToken = (id) => {
     return jwt.sign({id}, process.env.JWT_SECRET, {expiresIn: '30d'})
@@ -72,7 +73,6 @@ const login= async (req, res) => {
         throw new UnauthenticatedError('invalid credentials')
     }
 
-
     const token = generateToken(user._id)
 
     //send only-http cookie
@@ -123,5 +123,70 @@ const getUser = async (req, res) => {
 
 }
 
+const loginStatus = async (req, res) => {
+    const token = req.cookies.token
 
-module.exports = {register, login, logout, getUser}
+    if(!token){
+        return res.json(false)
+    }
+
+
+    const verifiedToken = jwt.verify(token, process.env.JWT_SECRET)
+
+    if(verifiedToken){
+        return res.json(true)
+    } else{
+        return res.json(false)
+    }
+}
+
+const updateUser = async (req, res) => {
+
+    const { name, bio, phone, photo } = req.body
+
+    const user = await UserModel.findById(req.user._id)
+
+    if(!user){
+        throw new NotFoundError('no user data found!')
+    }
+
+    user.email = user.email
+    user.name = name || user.name
+    user.bio = bio || user.bio
+    user.phone = phone || user.phone
+    user.photo = photo || user.photo
+
+    const updatedUser = await user.save()
+
+    res.status(StatusCodes.OK).json({updatedUser})
+}
+
+const updatePassword = async (req, res) => {
+    const {oldPassword, newPassword} = req.body
+
+    const user = await UserModel.findById(req.user._id)
+
+    if(!user){
+        throw new NotFoundError('user not found, please sign up')
+    }
+
+    if (!oldPassword || !newPassword){
+        throw new BadRequestError('please add old and new password')
+    }
+
+    const passwordIsCorrect = await bcrypt.compare(oldPassword, user.password)
+
+    if (user && passwordIsCorrect) {
+        user.password = newPassword
+        await user.save()
+        res.status(StatusCodes.OK).send("password changed successfully")
+    } else {
+        throw new UnauthenticatedError('old password incorrect')
+    }
+
+}
+
+
+
+
+module.exports = {register, login, logout, getUser, loginStatus, updateUser, updatePassword}
