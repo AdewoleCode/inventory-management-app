@@ -186,7 +186,11 @@ const updatePassword = async (req, res) => {
 
 }
 
+const forgotPassword = async ()=> {
+    
+}
 
 
 
-module.exports = {register, login, logout, getUser, loginStatus, updateUser, updatePassword}
+
+module.exports = {register, login, logout, getUser, loginStatus, updateUser, updatePassword, forgotPassword}
