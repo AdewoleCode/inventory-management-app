@@ -1,4 +1,4 @@
-const UserModel = require('../models/User')
+const UserModel = require('../models/UserModel')
 const { StatusCodes } = require('http-status-codes')
 const jwt = require('jsonwebtoken')
 const { BadRequestError, UnauthenticatedError, NotFoundError } = require('../errors')
