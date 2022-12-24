@@ -1,16 +1,17 @@
-const asyncHandler = require("express-async-handler");
 const Product = require("../models/productModel");
 const { fileSizeFormatter } = require("../utils/fileUpload");
 const cloudinary = require("cloudinary").v2;
+const { BadRequestError, UnauthenticatedError, NotFoundError } = require('../errors')
+const { StatusCodes } = require('http-status-codes')
+
 
 // Create Prouct
-const createProduct = asyncHandler(async (req, res) => {
+const createProduct = async (req, res) => {
   const { name, sku, category, quantity, price, description } = req.body;
 
   //   Validation
   if (!name || !category || !quantity || !price || !description) {
-    res.status(400);
-    throw new Error("Please fill in all fields");
+    throw new BadRequestError("Please fill in all fields");
   }
 
   // Handle Image upload
@@ -24,8 +25,7 @@ const createProduct = asyncHandler(async (req, res) => {
         resource_type: "image",
       });
     } catch (error) {
-      res.status(500);
-      throw new Error("Image could not be uploaded");
+      throw new BadRequestError("Image could not be uploaded");
     }
 
     fileData = {
@@ -49,49 +49,45 @@ const createProduct = asyncHandler(async (req, res) => {
   });
 
   res.status(201).json(product);
-});
+};
 
 // Get all Products
-const getProducts = asyncHandler(async (req, res) => {
+const getProducts = async (req, res) => {
   const products = await Product.find({ user: req.user.id }).sort("-createdAt");
-  res.status(200).json(products);
-});
+  res.status(StatusCodes.OK).json(products);
+};
 
 // Get single product
-const getProduct = asyncHandler(async (req, res) => {
+const getProduct = async (req, res) => {
   const product = await Product.findById(req.params.id);
   // if product doesnt exist
   if (!product) {
-    res.status(404);
-    throw new Error("Product not found");
+    throw new NotFoundError("Product not found");
   }
   // Match product to its user
   if (product.user.toString() !== req.user.id) {
-    res.status(401);
-    throw new Error("User not authorized");
+    throw new UnauthenticatedError("User not authorized");
   }
   res.status(200).json(product);
-});
+};
 
 // Delete Product
-const deleteProduct = asyncHandler(async (req, res) => {
+const deleteProduct = async (req, res) => {
   const product = await Product.findById(req.params.id);
   // if product doesnt exist
   if (!product) {
-    res.status(404);
-    throw new Error("Product not found");
+    throw new NotFoundError("Product not found");
   }
   // Match product to its user
   if (product.user.toString() !== req.user.id) {
-    res.status(401);
-    throw new Error("User not authorized");
+    throw new UnauthenticatedError("User not authorized");
   }
   await product.remove();
   res.status(200).json({ message: "Product deleted." });
-});
+};
 
 // Update Product
-const updateProduct = asyncHandler(async (req, res) => {
+const updateProduct = async (req, res) => {
   const { name, category, quantity, price, description } = req.body;
   const { id } = req.params;
 
@@ -99,13 +95,11 @@ const updateProduct = asyncHandler(async (req, res) => {
 
   // if product doesnt exist
   if (!product) {
-    res.status(404);
-    throw new Error("Product not found");
+    throw new NotFoundError("Product not found");
   }
   // Match product to its user
   if (product.user.toString() !== req.user.id) {
-    res.status(401);
-    throw new Error("User not authorized");
+    throw new UnauthenticatedError("User not authorized");
   }
 
   // Handle Image upload
@@ -119,8 +113,7 @@ const updateProduct = asyncHandler(async (req, res) => {
         resource_type: "image",
       });
     } catch (error) {
-      res.status(500);
-      throw new Error("Image could not be uploaded");
+      throw new BadRequestError("Image could not be uploaded, something went wrong!");
     }
 
     fileData = {
@@ -148,8 +141,8 @@ const updateProduct = asyncHandler(async (req, res) => {
     }
   );
 
-  res.status(200).json(updatedProduct);
-});
+  res.status(StatusCodes.OK).json(updatedProduct);
+};
 
 module.exports = {
   createProduct,

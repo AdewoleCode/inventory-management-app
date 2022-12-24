@@ -193,8 +193,7 @@ const forgotPassword = async (req, res) => {
     const user = await UserModel.findOne({ email });
   
     if (!user) {
-      res.status(404);
-      throw new Error("User does not exist");
+      throw new NotFoundError("User does not exist");
     }
   
     // Delete token if it exists in DB
@@ -241,10 +240,10 @@ const forgotPassword = async (req, res) => {
   
     try {
       await sendEmail(subject, message, send_to, sent_from);
-      res.status(200).json({ success: true, message: "Reset Email Sent" });
-    } catch (error) {
-      res.status(500);
-      throw new Error("Email not sent, please try again");
+      res.status(StatusCodes.OK).json({ success: true, message: "Reset Email Sent" });
+    } catch (error)
+     {;
+      throw new BadRequestError("Email not sent, please try again");
     }
   };
   
@@ -266,15 +265,14 @@ const forgotPassword = async (req, res) => {
     });
   
     if (!userToken) {
-      res.status(404);
-      throw new Error("Invalid or Expired Token");
+      throw new UnauthenticatedError("Invalid or Expired Token");
     }
   
     // Find user
     const user = await UserModel.findOne({ _id: userToken.userId });
     user.password = password;
     await user.save();
-    res.status(200).json({
+    res.status(StatusCodes.OK).json({
       message: "Password Reset Successful, Please Login",
     });
   };
